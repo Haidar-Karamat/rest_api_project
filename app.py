@@ -1,5 +1,4 @@
 import os
-from flask import Flask
 from flask_smorest import Api
 from flask import Flask, jsonify
 from blocklist import BLOCKLIST
@@ -25,21 +24,21 @@ def create_app(db_url=None):
         "OPENAPI_SWAGGER_UI_URL"
     ] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
     app.config["SQLALCHEMY_DATABASE_URI"] = db_url or os.getenv("DATABASE_URL", "sqlite:///data.db")
+    app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "default_secret")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["PROPAGATE_EXCEPTIONS"] = True
-    db.init_app(app)
+    
 
     from models.item import ItemModel
     from models.store import StoreModel
     from models.tag import TagModel
     from models.user import UserModel
 
-
+    db.init_app(app)
     migrate = Migrate(app, db)
     api = Api(app)
 
 
-    app.config["JWT_SECRET_KEY"] = "hadi@5444"
     jwt = JWTManager(app)
 
     @jwt.additional_claims_loader
@@ -112,6 +111,9 @@ def create_app(db_url=None):
     api.register_blueprint(UserBlueprint)
 
     
+    @app.teardown_appcontext
+    def shutdown_session(exception=None):
+        db.session.remove()
 
 
     return app

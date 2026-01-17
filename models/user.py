@@ -6,3 +6,11 @@ class UserModel(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     password = db.Column(db.String(256), nullable=False)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "username": self.username
+            # ⚠️ Don’t expose password in API responses
+        }
+
